@@ -1,0 +1,75 @@
+# Web application security with DVWA, the Damn Vulnerable Web Application, and its database.
+#
+# Your copy is the only thing you may attack, and it is the only thing you can reach: this
+# lab has no way out to the internet. Never point a tool at a site you do not own, in a lab
+# or anywhere else.
+#
+# Press Open on the lab's page and sign in as admin with the password password. The database
+# is made for you, so there is nothing to set up. The security level starts at low; change
+# it on the DVWA Security page and do the same exercise again to see what each fix changes.
+# The CAPTCHA exercise is not here: it needs Google's service, which a lab cannot reach.
+#
+# Hand in a screenshot of each exercise solved at low and one at high, with a paragraph on
+# what the vulnerable code did wrong and what the code at high does instead.
+#
+# The database is not saved: stopping the lab and starting it again is a fresh DVWA, the
+# same as pressing Create / Reset Database.
+
+services:
+  db:
+    image: mariadb:11.4
+    environment:
+      # Nothing outside this copy can reach the database, so these are written down.
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+      MARIADB_DATABASE: dvwa
+      MARIADB_USER: dvwa
+      MARIADB_PASSWORD: p@ssw0rd
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  dvwa:
+    image: ghcr.io/digininja/dvwa@sha256:1af2cedda7617e4d22937e61c98bbf71d8b74b98e46f5e41dd6aa0a5183311b0
+    environment:
+      DB_SERVER: db
+      DB_DATABASE: dvwa
+      DB_USER: dvwa
+      DB_PASSWORD: p@ssw0rd
+      DEFAULT_SECURITY_LEVEL: low
+    # Apache as the image starts it, with the setup page's Create / Reset Database pressed
+    # beside it once the server answers (the page redirects, so curl follows it to read the
+    # success message). A marker says it worked and the healthcheck waits
+    # for the marker, so "healthy" means you can sign in.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        (
+          until curl -fs -o /dev/null http://127.0.0.1/setup.php; do sleep 1; done
+          jar=/tmp/setup-cookies
+          token=$$(curl -s -c $$jar -b $$jar http://127.0.0.1/setup.php | sed -n "s/.*name=.user_token. value=.\([a-f0-9]*\).*/\1/p")
+          curl -s -L -c $$jar -b $$jar -d "create_db=Create+%2F+Reset+Database&user_token=$$token" http://127.0.0.1/setup.php | grep -q "Setup successful" && touch /tmp/ready
+        ) &
+        exec docker-php-entrypoint apache2-foreground
+    expose: ["80"]
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/ready"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    labels:
+      lab.title: DVWA
+      lab.open: "80"
