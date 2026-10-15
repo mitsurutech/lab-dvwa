@@ -46,31 +46,37 @@ You need Docker with the Compose plugin. The first start downloads the images.
 docker compose -f compose.yaml -f local.yaml up
 ```
 
-{c["local_open"]}
+Open <http://localhost:8080> and sign in as `admin` with the password `password`.
 
 `local.yaml` publishes the ports on `127.0.0.1` only, so the lab is reachable from your own computer and from nowhere else. Stop it with `Ctrl-C`, and remove it with `docker compose -f compose.yaml -f local.yaml down -v`. Run it on a machine you are happy to attack from: the application is insecure on purpose.
 
 ## Working through it
 
-{c["working"]}
+1. **Sign in** as `admin` with the password `password`. The database is already made, so there is nothing to set up.
+2. **Pick an exercise.** DVWA is one weakness at a time: SQL injection, blind SQL injection, command injection, cross-site scripting (reflected and stored), CSRF, file upload, file inclusion, weak session identifiers, brute force and more.
+3. **Do it at low.** The security level starts at low. Each exercise's **View Source** button shows the code at the level in force.
+4. **Raise the level.** On the **DVWA Security** page choose medium, high and then impossible, and do the same exercise again: it shows what each fix changes and why the easy fix is not enough, which is the point of the lab.
+5. **Start again when you want to.** Stopping and starting the lab gives a fresh DVWA, the same as the setup page's **Create / Reset Database**.
 
 ## For teachers
 
 Nothing in this lab is marked automatically. The student hands in evidence and you mark it, the way you mark any other lab.
 
-**Ask for evidence in two halves.** First, proof of the work: {c["proof"]}, with the lab's own address visible in the browser so it is clearly their copy. Second, the understanding: for each one, a written explanation in their own words of what the weakness is, the exact input they used and why it worked, what an attacker could do with it, and how the code should have been written. The second half tells you whether it was understood or copied from a walkthrough. For stronger work ask for the fix as well as the attack.
+**Ask for evidence in two halves.** First, proof of the work: a screenshot of each exercise solved at low and again at high, with the lab's own address visible in the browser so it is clearly their copy. Second, the understanding: for each one, a written explanation in their own words of what the weakness is, the exact input they used and why it worked, what an attacker could do with it, and how the code should have been written. The second half tells you whether it was understood or copied from a walkthrough. For stronger work ask for the fix as well as the attack.
 
-**Where it sits in a course.** {c["course"]} Check your own awarding body's unit for the exact wording; none is quoted here.
+**Where it sits in a course.** DVWA suits secure coding and remediation, because the same exercise at four levels is the same code, insecure and then fixed: input validation, output encoding, parameterised queries and file handling. It also supports the legal and ethical side of a unit: authorisation and scope, the Computer Misuse Act 1990 and responsible disclosure. Check your own awarding body's unit for the exact wording; none is quoted here.
 
 **Who sees what.** These labs are often used with students aged 16 and 17. A copy is private to the student who started it. A member of staff who teaches the module can open it to see what the student has done, and opening a student's work is written to the access log, which the student can read.
 
 ## What does not work in a lab
 
-{c["limits"]}
+The CAPTCHA exercise is not available, because it needs Google's service on the internet, which a lab cannot reach. The lab has no way out to the internet at all. DVWA is given 512 MB and its database 384 MB.
 
 ## Troubleshooting
 
-{c["trouble"]}
+- **The sign-in page does not appear straight after Start.** Wait a few seconds and press Open again: the lab reports itself ready only once the database has been made and you can sign in.
+- **The database seems empty or broken.** Stop the lab and start it again for a fresh copy, or press **Create / Reset Database** on the setup page.
+- **On your own machine, port 8080 is already in use.** Change the left-hand number in `local.yaml`, for example `127.0.0.1:8081:80`, and open that port instead.
 
 ## Checking the lab
 
@@ -82,7 +88,7 @@ test/check.sh
 
 ## Versions and licences
 
-{c["licences"]}
+[DVWA](https://github.com/digininja/DVWA) is GPL-3.0 licensed and [MariaDB](https://mariadb.org) is GPL-2.0. The images are `ghcr.io/digininja/dvwa` pinned by digest and `mariadb:11.4`.
 
 The compose file, the tests and this documentation are MIT licensed, see [LICENSE](LICENSE): copy it, change it, teach with it. The application inside is the licence of its own project, linked above.
 
